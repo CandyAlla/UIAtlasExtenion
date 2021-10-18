@@ -239,6 +239,13 @@ public class AtlasSettingWindow : EditorWindow
 					GUILayout.EndHorizontal();
 					
 				}
+
+				bool isApply = false;
+				isApply = GUILayout.Button("Apply");
+				if (isApply)
+				{
+					texture.SaveAndReimport();
+				}
 			}
 			
 			
@@ -283,8 +290,7 @@ public class AtlasSettingWindow : EditorWindow
 			string str2 = "Output:The sprite mipmap setting:" + NGUISettings.IsSpriteMipmap;
 			GUILayout.Label(str1);
 			GUILayout.Label(str2);
-			Debug.Log(str1);
-			Debug.Log(str2);
+			
 			GUILayout.EndHorizontal();
 			NGUIEditorTools.EndContents();
 		}
