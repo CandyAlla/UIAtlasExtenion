@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8297996515950583637}
   - component: {fileID: 4937836237944829402}
+  - component: {fileID: 965479716286855748}
   m_Layer: 0
   m_Name: AltasFolder
   m_TagString: Untagged
@@ -292,6 +293,25 @@ MonoBehaviour:
     paddingRight: 0
     paddingTop: 1
     paddingBottom: 1
+  mPixelSize: 1
+  mReplacement: {fileID: 0}
+  mCoordinates: 0
+  sprites: []
+  mSquare: 0
+--- !u!114 &965479716286855748
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6764288092142163727}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4d0c51bb0b6e93049af5e88f93826e3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  material: {fileID: 0}
+  mSprites: []
   mPixelSize: 1
   mReplacement: {fileID: 0}
   mCoordinates: 0
