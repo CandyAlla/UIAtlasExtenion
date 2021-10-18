@@ -605,6 +605,12 @@ public class UIAtlasMaker : EditorWindow
 		// Pack the sprites into this texture
 		if (PackTextures(tex, sprites))
 		{
+			if (tex.width > NGUISettings.GetTextureMax.x || tex.height > NGUISettings.GetTextureMax.y)
+			{
+				Debug.LogError("图集超过设置的最大尺寸！！！名字:"+tex.name+"限制尺寸："+NGUISettings.GetTextureMax);
+				Debug.LogError("结果尺寸："+tex.width+"X"+tex.height);
+				return false;
+			}
 			byte[] bytes = tex.EncodeToPNG();
 			System.IO.File.WriteAllBytes(newPath, bytes);
 			bytes = null;
@@ -614,12 +620,7 @@ public class UIAtlasMaker : EditorWindow
 			AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
 			tex = NGUIEditorTools.ImportTexture(newPath, false, true, !atlas.premultipliedAlpha);
 
-			if (tex.width > NGUISettings.GetTextureMax.x || tex.height > NGUISettings.GetTextureMax.y)
-			{
-				Debug.LogError("图集超过设置的最大尺寸！！！名字:"+tex.name+"限制尺寸："+NGUISettings.GetTextureMax);
-				Debug.LogError("结果尺寸："+tex.width+"X"+tex.height);
-				return false;
-			}
+			
 			// Update the atlas texture
 			if (newTexture)
 			{
