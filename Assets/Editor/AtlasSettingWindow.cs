@@ -9,15 +9,40 @@ using UnityEngine;
 public class AtlasSettingWindow : EditorWindow
 {
     UIAtlas mLastAtlas;
+    
+	struct FolderSetting
+    {
+	    public  bool isSelected;
+	    public  string path;
+    }
+
     private static string path = "Assets/Result";
     private  static AtlasSettingWindow _window;
     
     public static bool showLog= false;
-    public static AtlasSettingWindow GetAtlasSettingWindow(string name)
+    static List<FolderSetting> allFolder = new List<FolderSetting>();
+    static List<FolderSetting> exceptFolder = new List<FolderSetting>();
+    public static AtlasSettingWindow GetAtlasSettingWindow(string name,List<string> paths)
     {
+	    //todo read json to select folders 
+	    for (int i = 0; i < paths.Count; i++)
+	    {
+		    FolderSetting s = new FolderSetting();
+		    var parent = Directory.GetParent(paths[i]).ToString();
+		    if (paths.Contains(parent))
+		    {
+			    
+		    }
+		    
+		    s.isSelected = true;
+		    s.path = paths[i];
+		    allFolder.Add(s);
+	    }
+	    exceptFolder.Clear();
         _window = (AtlasSettingWindow)EditorWindow.GetWindow(typeof(AtlasSettingWindow), false, name);
         return _window;
         path += name;
+        
     }
 
     private void OnGUI()
@@ -27,12 +52,161 @@ public class AtlasSettingWindow : EditorWindow
             mLastAtlas = NGUISettings.atlas;
         }
         
+        
+
+        #region folder setting
+
+        if (allFolder.Count > 0)
+        {
+	        NGUIEditorTools.DrawHeader("Folder Edit", true);
+	        NGUIEditorTools.BeginContents(false);
+
+	        for (int i = 0; i < allFolder.Count; i++)
+	        {
+		        EditorGUILayout.BeginHorizontal();
+		        // EditorGUILayout.Toggle("Trim Alpha", NGUISettings.atlasTrimming, GUILayout.Width(100f));
+		        
+		        var folderSetting = allFolder[i];
+		        bool sel = EditorGUILayout.ToggleLeft(folderSetting.path, folderSetting.isSelected);
+		        folderSetting.isSelected = sel;
+		        allFolder[i] = folderSetting;
+		        if (sel)
+		        {
+			        //choose
+			        if (exceptFolder.Contains(allFolder[i]))
+				        exceptFolder.Remove(allFolder[i]);
+		        }
+		        else
+		        {
+			        //un choose
+			        if(!exceptFolder.Contains(allFolder[i]))
+				        exceptFolder.Add(allFolder[i]);
+		        }
+		        EditorGUILayout.EndHorizontal();
+	        }
+	        
+	        
+	        NGUIEditorTools.EndContents();
+        }
+        
+
+        #endregion
+        
+      
+		#region atlas texutre setting
+
+		NGUIEditorTools.DrawHeader("Atlas Texture Setting", true);
+		NGUIEditorTools.BeginContents(true);
+
+		//图集的最大限制尺寸
+		GUILayout.BeginHorizontal();
+		GUILayout.Label("Max texture size :",GUILayout.Width(150f));
+		Vector2 maxSize = NGUISettings.GetTextureMax;
+		maxSize.x = EditorGUILayout.IntField("x", (int)maxSize.x,GUILayout.Width(300f));
+		maxSize.y = EditorGUILayout.IntField("y", (int)maxSize.y,GUILayout.Width(300f));
+		NGUISettings.GetTextureMax = maxSize;
+		GUILayout.EndHorizontal();
+		
+		if (NGUISettings.atlas != null)
+		{
+			Material mat = NGUISettings.atlas.spriteMaterial;
+			Texture tex = NGUISettings.atlas.texture;
+			string path = AssetDatabase.GetAssetPath(tex);
+			TextureImporter texture = AssetImporter.GetAtPath(path) as TextureImporter;
+
+			if (texture != null)
+			{
+				//texture type
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Texture Type:",GUILayout.Width(150f));
+				texture.textureType = (TextureImporterType)EditorGUILayout.Popup((int)texture.textureType, System.Enum.GetNames(typeof(TextureImporterType)));
+				GUILayout.EndHorizontal();
+				
+				//texture shape
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Texture Shape:",GUILayout.Width(150f));
+				texture.textureShape = (TextureImporterShape)EditorGUILayout.Popup((int)texture.textureShape, System.Enum.GetNames(typeof(TextureImporterShape)));
+				GUILayout.EndHorizontal();
+				
+				//texture sRGB
+				GUILayout.BeginHorizontal();
+				texture.sRGBTexture = EditorGUILayout.Toggle("Texture sRGB", texture.sRGBTexture, GUILayout.Width(100f));
+				GUILayout.EndHorizontal();
+				
+				//texture wrap Mode
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Texture WrapMode:",GUILayout.Width(150f));
+				texture.wrapMode = (TextureWrapMode)EditorGUILayout.Popup((int)texture.wrapMode, System.Enum.GetNames(typeof(TextureWrapMode)));
+				GUILayout.EndHorizontal();
+			
+				//texture filter mode
+				GUILayout.BeginHorizontal();
+				GUILayout.Label("Texture Filter Mode",GUILayout.Width(150f));
+				texture.filterMode =
+					(FilterMode) EditorGUILayout.Popup((int) texture.filterMode, Enum.GetNames(typeof(FilterMode)));
+				GUILayout.EndHorizontal();
+			
+				//texture mipmap
+				GUILayout.BeginHorizontal();
+				texture.mipmapEnabled = EditorGUILayout.Toggle("Texture Mipmap", texture.mipmapEnabled, GUILayout.Width(400));
+				GUILayout.EndHorizontal();
+
+				if (texture.mipmapEnabled)
+				{
+					GUILayout.BeginHorizontal();
+					texture.borderMipmap = EditorGUILayout.Toggle("Texture borderMipmap", texture.borderMipmap, GUILayout.Width(300));
+					GUILayout.EndHorizontal();
+					
+					GUILayout.BeginHorizontal();
+					GUILayout.Label("Texture MipMap Filtering",GUILayout.Width(200));
+					texture.mipmapFilter =
+						(TextureImporterMipFilter) EditorGUILayout.Popup((int) texture.mipmapFilter, Enum.GetNames(typeof(TextureImporterMipFilter)));
+					GUILayout.EndHorizontal();
+					
+					GUILayout.BeginHorizontal();
+					texture.mipMapsPreserveCoverage = EditorGUILayout.Toggle("Texture mipMapsPreserveCoverage", texture.mipMapsPreserveCoverage, GUILayout.Width(300));
+					GUILayout.EndHorizontal();
+					
+					GUILayout.BeginHorizontal();
+					texture.fadeout = EditorGUILayout.Toggle("Texture mipMapsfadeout", texture.fadeout, GUILayout.Width(300));
+					GUILayout.EndHorizontal();
+					
+				}
+
+				bool isApply = false;
+				isApply = GUILayout.Button("Apply");
+				if (isApply)
+				{
+					texture.SaveAndReimport();
+				}
+			}
+			
+			
+		}
+		NGUIEditorTools.EndContents();
+
+		#endregion
+		
+
+		#region sprite settings
+		//sprite  设置
+		NGUIEditorTools.DrawHeader("sprite setting :", true);
+		NGUIEditorTools.BeginContents(true);
+		
+		//图片是否关闭mipmap
+		GUILayout.BeginHorizontal();
+		NGUISettings.IsSpriteMipmap= EditorGUILayout.Toggle("sprite Mipmap", NGUISettings.IsSpriteMipmap, GUILayout.Width(400));
+		GUILayout.EndHorizontal();
+		
+		NGUIEditorTools.EndContents();
+
+		#endregion
+		
+		#region altas maker setting 
+		NGUIEditorTools.DrawHeader("Atlas Maker Setting", true);
+        NGUIEditorTools.BeginContents(false);
         NGUIEditorTools.SetLabelWidth(84f);
         GUILayout.Space(3f);
-
-        NGUIEditorTools.DrawHeader("Atlas Maker Setting", true);
-        NGUIEditorTools.BeginContents(false);
-        
         if (NGUISettings.atlas != null)
         {
             Material mat = NGUISettings.atlas.spriteMaterial;
@@ -161,109 +335,10 @@ public class AtlasSettingWindow : EditorWindow
 		GUILayout.EndHorizontal();
 #endif
 		NGUIEditorTools.EndContents();
-		
-		NGUIEditorTools.DrawHeader("Atlas Texture Setting", true);
-		NGUIEditorTools.BeginContents(true);
+        
 
-		//图集的最大限制尺寸
-		GUILayout.BeginHorizontal();
-		GUILayout.Label("Max texture size :",GUILayout.Width(150f));
-		Vector2 maxSize = NGUISettings.GetTextureMax;
-		maxSize.x = EditorGUILayout.IntField("x", (int)maxSize.x,GUILayout.Width(300f));
-		maxSize.y = EditorGUILayout.IntField("y", (int)maxSize.y,GUILayout.Width(300f));
-		NGUISettings.GetTextureMax = maxSize;
-		GUILayout.EndHorizontal();
-		
-		if (NGUISettings.atlas != null)
-		{
-			Material mat = NGUISettings.atlas.spriteMaterial;
-			Texture tex = NGUISettings.atlas.texture;
-			string path = AssetDatabase.GetAssetPath(tex);
-			TextureImporter texture = AssetImporter.GetAtPath(path) as TextureImporter;
-
-			if (texture != null)
-			{
-				//texture type
-				GUILayout.BeginHorizontal();
-				GUILayout.Label("Texture Type:",GUILayout.Width(150f));
-				texture.textureType = (TextureImporterType)EditorGUILayout.Popup((int)texture.textureType, System.Enum.GetNames(typeof(TextureImporterType)));
-				GUILayout.EndHorizontal();
-				
-				//texture shape
-				GUILayout.BeginHorizontal();
-				GUILayout.Label("Texture Shape:",GUILayout.Width(150f));
-				texture.textureShape = (TextureImporterShape)EditorGUILayout.Popup((int)texture.textureShape, System.Enum.GetNames(typeof(TextureImporterShape)));
-				GUILayout.EndHorizontal();
-				
-				//texture sRGB
-				GUILayout.BeginHorizontal();
-				texture.sRGBTexture = EditorGUILayout.Toggle("Texture sRGB", texture.sRGBTexture, GUILayout.Width(100f));
-				GUILayout.EndHorizontal();
-				
-				//texture wrap Mode
-				GUILayout.BeginHorizontal();
-				GUILayout.Label("Texture WrapMode:",GUILayout.Width(150f));
-				texture.wrapMode = (TextureWrapMode)EditorGUILayout.Popup((int)texture.wrapMode, System.Enum.GetNames(typeof(TextureWrapMode)));
-				GUILayout.EndHorizontal();
-			
-				//texture filter mode
-				GUILayout.BeginHorizontal();
-				GUILayout.Label("Texture Filter Mode",GUILayout.Width(150f));
-				texture.filterMode =
-					(FilterMode) EditorGUILayout.Popup((int) texture.filterMode, Enum.GetNames(typeof(FilterMode)));
-				GUILayout.EndHorizontal();
-			
-				//texture mipmap
-				GUILayout.BeginHorizontal();
-				texture.mipmapEnabled = EditorGUILayout.Toggle("Texture Mipmap", texture.mipmapEnabled, GUILayout.Width(400));
-				GUILayout.EndHorizontal();
-
-				if (texture.mipmapEnabled)
-				{
-					GUILayout.BeginHorizontal();
-					texture.borderMipmap = EditorGUILayout.Toggle("Texture borderMipmap", texture.borderMipmap, GUILayout.Width(300));
-					GUILayout.EndHorizontal();
-					
-					GUILayout.BeginHorizontal();
-					GUILayout.Label("Texture MipMap Filtering",GUILayout.Width(200));
-					texture.mipmapFilter =
-						(TextureImporterMipFilter) EditorGUILayout.Popup((int) texture.mipmapFilter, Enum.GetNames(typeof(TextureImporterMipFilter)));
-					GUILayout.EndHorizontal();
-					
-					GUILayout.BeginHorizontal();
-					texture.mipMapsPreserveCoverage = EditorGUILayout.Toggle("Texture mipMapsPreserveCoverage", texture.mipMapsPreserveCoverage, GUILayout.Width(300));
-					GUILayout.EndHorizontal();
-					
-					GUILayout.BeginHorizontal();
-					texture.fadeout = EditorGUILayout.Toggle("Texture mipMapsfadeout", texture.fadeout, GUILayout.Width(300));
-					GUILayout.EndHorizontal();
-					
-				}
-
-				bool isApply = false;
-				isApply = GUILayout.Button("Apply");
-				if (isApply)
-				{
-					texture.SaveAndReimport();
-				}
-			}
-			
-			
-		}
-		NGUIEditorTools.EndContents();
-		
-		//sprite  设置
-		NGUIEditorTools.DrawHeader("sprite setting :", true);
-		NGUIEditorTools.BeginContents(true);
-		
-		//图片是否关闭mipmap
-		GUILayout.BeginHorizontal();
-		NGUISettings.IsSpriteMipmap= EditorGUILayout.Toggle("sprite Mipmap", NGUISettings.IsSpriteMipmap, GUILayout.Width(400));
-		GUILayout.EndHorizontal();
-		
-		
-		
-		NGUIEditorTools.EndContents();
+        #endregion
+       
 
 		GUILayout.BeginHorizontal();
 		bool update = false;

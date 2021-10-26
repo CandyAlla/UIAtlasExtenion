@@ -7,6 +7,7 @@ using UnityEditor;
 
 public class AtlasMakerExtention : Editor
 {
+    private static List<string> exceptPath;
 
     [MenuItem("NGUI/AltasMakerExtention")]
     static void MakeAltas()
@@ -32,8 +33,15 @@ public class AtlasMakerExtention : Editor
                 go = PrefabUtility.SaveAsPrefabAsset(new GameObject(),prefabPath);
             NGUISettings.atlas = go.AddComponent<UIAtlas>();
             // settingPath ="Assets/Result/" + Path.GetFileName(path)+".asset";
-            AtlasSettingWindow settingWindow = AtlasSettingWindow.GetAtlasSettingWindow(name);
+            
+            // get folders for edit
+            var paths = exceptPath= GetDirectionsFoldersPath(new DirectoryInfo(path));
+            AtlasSettingWindow settingWindow = AtlasSettingWindow.GetAtlasSettingWindow(name,paths);
             settingWindow.Show();
+        }
+        else
+        {
+            Debug.LogError("Please select a folder!");
         }
     }
     
@@ -76,6 +84,21 @@ public class AtlasMakerExtention : Editor
             UpdateAtlas(texures, false);
         }
         
+    }
+
+    static List<string> GetDirectionsFoldersPath(DirectoryInfo dir)
+    {
+        List<string> paths = new List<string>();
+
+        DirectoryInfo[] dii = dir.GetDirectories();
+        for (int i = 0; i < dii.Length; i++)
+        {
+            paths.Add(dii[i].FullName);
+            var r = GetDirectionsFoldersPath(dii[i]);
+            if(r.Count>0)
+                paths.AddRange(r);
+        }
+        return paths;
     }
 
     static List<FileInfo> GetDirectionsFolders(DirectoryInfo dir)
